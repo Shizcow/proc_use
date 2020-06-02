@@ -46,16 +46,22 @@ fn has_attr(attr: &str, item: syn::ItemUse) -> syn::Result<bool> {
 }
 
 fn tree_path(tree: syn::UseTree) -> String {
-    "".to_string()
+    match tree {
+	syn::UseTree::Path(path) => {
+	    println!("{:#?}", path);
+	    "succ".to_string()
+	},
+	_ => "err".to_string()
+    }
 }
 
 fn expand(items: Vec<syn::Item>) -> proc_macro2::TokenStream  {
     for item_outer in items.clone() {
 	match item_outer {
 	    syn::Item::Use(item_use) => {
-		
 		println!("{:#?}", item_use);
-		let res = has_attr("__mod", item_use);
+		let res = has_attr("__mod", item_use.clone());
+		let path = tree_path(item_use.tree);
 
 		match res {
 		    Ok(has_attr) => {
@@ -84,15 +90,12 @@ fn expand(items: Vec<syn::Item>) -> proc_macro2::TokenStream  {
 #[proc_macro]
 pub fn proc_use_inline(input: TokenStream) -> TokenStream {
     let input = syn::parse::<syn::File>(input);
-    
-    println!("{:?}", input);
+    // println!("{:#?}", input);
     match input {
 	Ok(tree) => {
 	    let output = expand(tree.items);
+	    return TokenStream::from(output)
 	},
 	Err(err) => return TokenStream::from(err.to_compile_error())
     }
-    
-    
-    TokenStream::new()
 }
