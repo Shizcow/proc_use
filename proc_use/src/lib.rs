@@ -13,11 +13,8 @@ struct ProcUseMacroInput {
     items: Vec<syn::Item>,
 }
 
-fn mk_err<T: quote::ToTokens>(t: T) -> Option<(bool, proc_macro2::TokenStream)> {
-    Some((
-        false,
-        syn::Error::new_spanned(t, "expected `builder(each = \"...\")`").to_compile_error(),
-    ))
+fn mk_err<T: quote::ToTokens>(t: T, msg: &str) -> syn::Error {
+    syn::Error::new_spanned(t, msg)
 }
 
 fn ident_match(term: &str, ident: syn::Ident) -> syn::Result<()> {
