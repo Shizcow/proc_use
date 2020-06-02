@@ -7,17 +7,18 @@ use proc_macro2::{Ident, Span};
 pub fn proc_use(input: TokenStream) -> TokenStream {
     if let Ok(items) = syn::parse::<Expr>(input) {
 	if let Expr::Array(arr) = items {
-	    for elem in arr.elems.into_iter() { // TODO concat the quotes
+	    let idents = arr.elems.into_iter().map(|elem| {
 		if let Expr::Lit(lit) = elem {
 		    if let Lit::Str(string) = lit.lit {
-			let use_ident = Ident::new(&string.value(),
+			return Ident::new(&string.value(),
 						   Span::call_site());
-			return TokenStream::from(quote! {
-			    use #use_ident::*;
-			})
 		    } // TODO: compiler error "must be a string"
 		} // TODO: compiler error "need lit"
-	    }
+		panic!("I don't have error reporting yet");
+	    });
+	    return TokenStream::from(quote! {
+		#(use #idents::*;)*
+	    })
 	} // TODO: env!()
     } // TODO: compiler error on else
     
