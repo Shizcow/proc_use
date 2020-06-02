@@ -8,12 +8,11 @@ use quote::quote;
 
 #[derive(Debug)]
 struct ProcUseMacroInput {
-    ident: syn::Ident,
     brace_token: syn::token::Brace,
     items: Vec<syn::Item>,
 }
 
-fn mk_err<T: quote::ToTokens>(t: T, msg: &str) -> syn::Error {
+fn mk_err<T: quote::ToTokens>(t: T, msg: String) -> syn::Error {
     syn::Error::new_spanned(t, msg)
 }
 
@@ -29,55 +28,46 @@ fn ident_match(term: &str, ident: syn::Ident) -> syn::Result<()> {
 }
 
 fn has_attr(attr: &str, item: syn::ItemUse) -> syn::Result<()> {
-    if item.attrs.len() == 1 {
+    let num_attrs = item.attrs.len();
+    if num_attrs == 1 {
 	let segments = item.attrs[0].path.segments.clone();
-	if segments.len() < 1 || segments.len() > 1 {
-	    return Ok(());
+	let num_segments = segments.len();
+	if num_segments < 1 || num_segments > 1 {
+	    return Err(mk_err(
+		segments,
+		format!("Error: expected 1 segment but recieved {}.", num_segments)
+	    ));
 	}
 
 	ident_match(attr, segments[0].ident.clone())?;
+    } else if num_attrs > 1 {
+	// return Ok(());
+	return Err(mk_err(
+	    item,
+	    format!("Error: expected 1 attribute but recieved {}.", num_attrs)
+	));
     }
-
+    
     Ok(())
-}
-
-fn expand_mod_all(items: Vec<syn::Item>,) -> proc_macro2::TokenStream {
-    for item_outer in items {
-	match item_outer {
-	    syn::Item::Use(item_use) => {
-		
-		println!("{:#?}", item_use);
-		has_attr("disabled", item_use);
-	    },
-	    _ => {
-		println!("fail");
-	    }
-	}
-	
-    }
-    proc_macro2::TokenStream::new()
-}
-
-fn expand_mod_none(items: Vec<syn::Item>,) -> proc_macro2::TokenStream {
-    proc_macro2::TokenStream::new()
 }
 
 impl ProcUseMacroInput {
     fn expand(&self) -> proc_macro2::TokenStream  {
-	match self.ident.to_string().as_str() {
-	    "mod_all" => {
-		expand_mod_all(self.items.clone())
-	    },
-	    "mod_none" => {
-		expand_mod_none(self.items.clone())
-	    },
-	    _ => {
-		syn::Error::new(
-		    self.ident.span(),
-		    "Invalid identifier. Use either mod_all or mod_none."
-		).to_compile_error().into()	
+	for item_outer in self.items.clone() {
+	    match item_outer {
+		syn::Item::Use(item_use) => {
+		    
+		    println!("{:#?}", item_use);
+		    has_attr("", item_use);
+		},
+		_ => {
+		    println!("fail");
+		}
 	    }
+	    
 	}
+	
+	proc_macro2::TokenStream::new()
     }
 }
 
@@ -86,7 +76,6 @@ impl Parse for ProcUseMacroInput {
 	let content;
 
         Ok(ProcUseMacroInput {
-	    ident: syn::Ident::parse(input)?,
 	    brace_token: syn::braced!(content in input),
 	    items: {
 		let mut items = Vec::new();
