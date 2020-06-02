@@ -1,10 +1,7 @@
-proc_use::proc_use_inline!(
-    {
-        #[mod_field]
-        use foo::*;
-        use bar::bar;
-    }
-);
+proc_use::proc_use_inline! {
+    #[__mod]
+    use foo::*;
+}
 
 fn main() {
     println!("hi");
