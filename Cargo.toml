@@ -1,0 +1,6 @@
+[workspace]
+
+members = [
+    "proc_use",
+    "examples/hello_world",
+]

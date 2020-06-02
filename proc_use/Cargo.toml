@@ -1,0 +1,19 @@
+[package]
+name = "proc_use"
+version = "0.1.0"
+authors = ["Shizcow <pohl.devin@gmail.com>"]
+edition = "2018"
+license = "GPL-2.0+"
+description = "Semi-dynamic imports"
+readme = "README.md"
+repository = "https://github.com/Shizcow/proc_use"
+keywords = ["use", "dynamic", "import"]
+categories = ["development-tools"]
+
+[lib]
+proc-macro = true
+
+[dependencies]
+proc-macro2 = "1.0.17"
+syn = {version = "1.0.23", features = ["full", "extra-traits"]}
+quote = "1.0.6"
