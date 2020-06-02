@@ -13,25 +13,35 @@ struct ProcUseMacroInput {
     items: Vec<syn::Item>,
 }
 
-fn ident_match(term: String, ident: syn::Ident) -> String {
-    if ident.to_string() == term {
-	return term;
-    }
-    "".to_string()
+fn mk_err<T: quote::ToTokens>(t: T) -> Option<(bool, proc_macro2::TokenStream)> {
+    Some((
+        false,
+        syn::Error::new_spanned(t, "expected `builder(each = \"...\")`").to_compile_error(),
+    ))
 }
 
-fn has_attr(attr: String, item: syn::ItemUse) -> bool {
+fn ident_match(term: &str, ident: syn::Ident) -> syn::Result<()> {
+    if ident.to_string().as_str() == term {
+	return Ok(());
+    }
+    
+    Err(syn::Error::new(
+	ident.span(),
+	format!("Error expected ident to say {} and got {}.", term, ident.to_string())
+    ))
+}
+
+fn has_attr(attr: &str, item: syn::ItemUse) -> syn::Result<()> {
     if item.attrs.len() == 1 {
 	let segments = item.attrs[0].path.segments.clone();
 	if segments.len() < 1 || segments.len() > 1 {
-	    return false;
+	    return Ok(());
 	}
-	
-	println!("{:#?}", item.attrs[0].path.segments);
-	return true;
+
+	ident_match(attr, segments[0].ident.clone())?;
     }
 
-    false
+    Ok(())
 }
 
 fn expand_mod_all(items: Vec<syn::Item>,) -> proc_macro2::TokenStream {
@@ -39,8 +49,8 @@ fn expand_mod_all(items: Vec<syn::Item>,) -> proc_macro2::TokenStream {
 	match item_outer {
 	    syn::Item::Use(item_use) => {
 		
-		// println!("{:#?}", item_use);
-		has_attr("disabled".to_string(), item_use);
+		println!("{:#?}", item_use);
+		has_attr("disabled", item_use);
 	    },
 	    _ => {
 		println!("fail");
@@ -66,9 +76,9 @@ impl ProcUseMacroInput {
 	    },
 	    _ => {
 		syn::Error::new(
-			self.ident.span(),
-			"Invalid identifier. Use either mod_all or mod_none."
-		    ).to_compile_error().into()	
+		    self.ident.span(),
+		    "Invalid identifier. Use either mod_all or mod_none."
+		).to_compile_error().into()	
 	    }
 	}
     }
