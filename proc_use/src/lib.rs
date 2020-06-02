@@ -17,6 +17,7 @@ fn mk_err<T: quote::ToTokens>(t: T, msg: String) -> syn::Error {
 }
 
 fn ident_match(term: &str, ident: syn::Ident) -> syn::Result<bool> {
+    println!("term: {}, ident: {}", term, ident.to_string());
     if ident.to_string().as_str() == term {
 	return Ok(true);
     }
@@ -39,7 +40,7 @@ fn has_attr(attr: &str, item: syn::ItemUse) -> syn::Result<bool> {
 	    ));
 	}
 
-	ident_match(attr, segments[0].ident.clone())?;
+	return ident_match(attr, segments[0].ident.clone());
     } else if num_attrs > 1 {
 	return Err(mk_err(
 	    item,
@@ -52,7 +53,6 @@ fn has_attr(attr: &str, item: syn::ItemUse) -> syn::Result<bool> {
 
 impl ProcUseMacroInput {
     fn expand(&self) -> proc_macro2::TokenStream  {
-	
 	for item_outer in self.items.clone() {
 	    match item_outer {
 		syn::Item::Use(item_use) => {
@@ -62,13 +62,20 @@ impl ProcUseMacroInput {
 
 		    match res {
 			Ok(has_attr) => {
-			    println!("I have attr and its valid");
+			    if has_attr {
+				println!("I have attr and its valid");
+			    } else {
+				println!("no attr!");
+			    }
 			},
 			Err(err) => return err.to_compile_error()
 		    }
 		},
 		_ => {
-		    println!("fail");
+		    return mk_err(
+			item_outer,
+			"Error: expected syn::ItemUse. More info found at https://docs.rs/syn/1.0.30/syn/struct.ItemUse.html.".to_string()
+		    ).to_compile_error();
 		}
 	    }
 	    
@@ -108,5 +115,5 @@ pub fn proc_use_inline(input: TokenStream) -> TokenStream {
     // println!("{:#?}", input);
     // println!("{:#?}", output);
     
-    TokenStream::new()
+   output.into()
 }
