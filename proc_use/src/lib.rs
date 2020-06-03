@@ -1,9 +1,6 @@
 extern crate proc_macro;
 
 use proc_macro::TokenStream;
-use proc_macro2::Span;
-use syn::{parse_macro_input, Result, Token};
-use syn::parse::{Parse, ParseStream};
 use quote::quote;
 
 fn mk_err<T: quote::ToTokens>(t: T, msg: String) -> syn::Error {
@@ -11,7 +8,6 @@ fn mk_err<T: quote::ToTokens>(t: T, msg: String) -> syn::Error {
 }
 
 fn ident_match(term: &str, ident: syn::Ident) -> syn::Result<bool> {
-    println!("term: {}, ident: {}", term, ident.to_string());
     if ident.to_string().as_str() == term {
 	return Ok(true);
     }
@@ -48,53 +44,65 @@ fn has_attr(attr: &str, item: syn::ItemUse) -> syn::Result<bool> {
 fn tree_path(tree: syn::UseTree) -> String {
     match tree {
 	syn::UseTree::Path(path) => {
-	    println!("{:#?}", path);
-	    "succ".to_string()
+	    path.ident.to_string()
 	},
 	_ => "err".to_string()
     }
 }
 
-fn expand(items: Vec<syn::Item>) -> proc_macro2::TokenStream  {
+fn expand(items: Vec<syn::Item>) -> TokenStream  {
+    let mut mod_stmts = Vec::new();
+    let mut use_stmts = Vec::new();
+    
     for item_outer in items.clone() {
 	match item_outer {
-	    syn::Item::Use(item_use) => {
-		println!("{:#?}", item_use);
+	    syn::Item::Use(mut item_use) => {
 		let res = has_attr("__mod", item_use.clone());
-		let path = tree_path(item_use.tree);
+		let mod_name = tree_path(item_use.clone().tree);
+		item_use.attrs.clear();
+		use_stmts.push(item_use);
 
 		match res {
 		    Ok(has_attr) => {
 			if has_attr {
-			    println!("I have attr and its valid");
+			    let mod_stmt = format!("mod {};", mod_name);
+			    match syn::parse_str::<syn::ItemMod>(&mod_stmt) {
+				Ok(item) => {
+				    mod_stmts.push(item);
+				},
+				Err(err) => {
+				    return TokenStream::from(err.to_compile_error());   
+				}
+			    }
 			} else {
 			    println!("no attr!");
 			}
 		    },
-		    Err(err) => return err.to_compile_error()
+		    Err(err) => return TokenStream::from(err.to_compile_error())
 		}
 	    },
 	    _ => {
-		return mk_err(
+		return TokenStream::from(mk_err(
 		    item_outer,
 		    "Error: expected syn::ItemUse. More info found at https://docs.rs/syn/1.0.30/syn/struct.ItemUse.html.".to_string()
-		).to_compile_error();
+		).to_compile_error());
 	    }
 	}
-	
     }
-	
-	proc_macro2::TokenStream::new()
+
+    TokenStream::from(quote! {
+	#(#mod_stmts)*
+	#(#use_stmts)*
+    })
 }
 
 #[proc_macro]
 pub fn proc_use_inline(input: TokenStream) -> TokenStream {
     let input = syn::parse::<syn::File>(input);
-    // println!("{:#?}", input);
     match input {
 	Ok(tree) => {
 	    let output = expand(tree.items);
-	    return TokenStream::from(output)
+	    return output;
 	},
 	Err(err) => return TokenStream::from(err.to_compile_error())
     }
