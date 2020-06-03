@@ -1,116 +1,53 @@
 extern crate proc_macro;
 
-use proc_macro::TokenStream;
-use proc_macro2::Span;
-use syn::{parse_macro_input, Result, Token};
-use syn::parse::{Parse, ParseStream};
-use quote::quote;
+use proc_macro::{TokenStream, TokenTree::{self, Punct, Group}, Delimiter::Bracket, Ident};
+use syn::{File, parse_macro_input};
 
-#[derive(Debug)]
-struct ProcUseMacroInput {
-    ident: syn::Ident,
-    brace_token: syn::token::Brace,
-    items: Vec<syn::Item>,
-}
-
-fn mk_err<T: quote::ToTokens>(t: T, msg: &str) -> syn::Error {
-    syn::Error::new_spanned(t, msg)
-}
-
-fn ident_match(term: &str, ident: syn::Ident) -> syn::Result<()> {
-    if ident.to_string().as_str() == term {
-	return Ok(());
+// replaces keyword `mod` with `__mod` in attribute contexts
+fn sanitize(input: TokenStream) -> TokenStream {
+    let mut tokens: Vec<TokenTree> = input.into_iter().collect();
+    for i in 0..tokens.len()-1 {
+	match &tokens[i] {
+	    Punct(p) if p.as_char() == '#' => {
+		match &tokens[i+1] {
+		    Group(g) if g.delimiter() == Bracket => {
+			let mut stream: Vec<TokenTree> = g.stream().into_iter().collect();
+			if stream.len() == 1 && stream[0].to_string() == "mod" {
+			    stream[0] = TokenTree::Ident(Ident::new("__mod", stream[0].span()));
+			}
+			tokens[i+1] = Group(proc_macro::Group::new(Bracket, stream.into_iter().collect()));
+		    },
+		    Punct(p) if p.as_char() == '!' => {
+			match &tokens[i+2] {
+			    Group(g) if g.delimiter() == Bracket => {
+				let mut stream: Vec<TokenTree> = g.stream().into_iter().collect();
+				if stream.len() == 1 && stream[0].to_string() == "mod" {
+				    stream[0] = TokenTree::Ident(Ident::new("__mod", stream[0].span()));
+				}
+				tokens[i+2] = Group(proc_macro::Group::new(Bracket, stream.into_iter().collect()));
+			    },
+			    _ => {},
+			}
+		    },
+		    _ => {},
+		}
+	    },
+	    _ => {},
+	}
     }
     
-    Err(syn::Error::new(
-	ident.span(),
-	format!("Error expected ident to say {} and got {}.", term, ident.to_string())
-    ))
+    tokens.into_iter().collect()
 }
-
-fn has_attr(attr: &str, item: syn::ItemUse) -> syn::Result<()> {
-    if item.attrs.len() == 1 {
-	let segments = item.attrs[0].path.segments.clone();
-	if segments.len() < 1 || segments.len() > 1 {
-	    return Ok(());
-	}
-
-	ident_match(attr, segments[0].ident.clone())?;
-    }
-
-    Ok(())
-}
-
-fn expand_mod_all(items: Vec<syn::Item>,) -> proc_macro2::TokenStream {
-    for item_outer in items {
-	match item_outer {
-	    syn::Item::Use(item_use) => {
-		
-		println!("{:#?}", item_use);
-		has_attr("disabled", item_use);
-	    },
-	    _ => {
-		println!("fail");
-	    }
-	}
-	
-    }
-    proc_macro2::TokenStream::new()
-}
-
-fn expand_mod_none(items: Vec<syn::Item>,) -> proc_macro2::TokenStream {
-    proc_macro2::TokenStream::new()
-}
-
-impl ProcUseMacroInput {
-    fn expand(&self) -> proc_macro2::TokenStream  {
-	match self.ident.to_string().as_str() {
-	    "mod_all" => {
-		expand_mod_all(self.items.clone())
-	    },
-	    "mod_none" => {
-		expand_mod_none(self.items.clone())
-	    },
-	    _ => {
-		syn::Error::new(
-		    self.ident.span(),
-		    "Invalid identifier. Use either mod_all or mod_none."
-		).to_compile_error().into()	
-	    }
-	}
-    }
-}
-
-impl Parse for ProcUseMacroInput {
-    fn parse(input: ParseStream) -> Result<Self> {
-	let content;
-
-        Ok(ProcUseMacroInput {
-	    ident: syn::Ident::parse(input)?,
-	    brace_token: syn::braced!(content in input),
-	    items: {
-		let mut items = Vec::new();
-                while !content.is_empty() {
-                    items.push(content.parse()?);
-                }
-                items
-	    },
-        })
-    }
-}
-
-// impl Into<proc_macro2::TokenStream> for ProcUseMacroInput {
-//     fn into(self) -> proc_macro2::TokenStream {
-//         self.expand(self.tt.clone())
-//     }
-// }
 
 #[proc_macro]
-pub fn proc_use_inline(input: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(input as ProcUseMacroInput);
-    let output = input.expand();
-    // println!("{:#?}", input);
-    // println!("{:#?}", output);
+pub fn proc_use(input: TokenStream) -> TokenStream {
+    let input = sanitize(input);
+    // because `mod` is a keyword, replace it in attributes with `__mod`
+    // This is done without regex in order to preserve span info
     
-    TokenStream::new()
+    let parsed = parse_macro_input!(input as File);
+
+    panic!("{:#?}", parsed);
+
+    //TokenStream::new()
 }
