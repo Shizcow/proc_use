@@ -7,6 +7,6 @@ proc_use::proc_use_inline! {
 
 fn main() {
     println!("hi");
-    // foo();
-    // bar();
+    foo();
+    bar();
 }
