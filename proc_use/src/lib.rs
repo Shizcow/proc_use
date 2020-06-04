@@ -3,6 +3,7 @@ extern crate proc_macro;
 use syn::{File, parse_macro_input, spanned::Spanned};
 use proc_macro::{Delimiter, TokenStream, TokenTree, Ident};
 use quote::quote;
+use regex::Regex;
 
 fn mk_err<T: quote::ToTokens>(t: T, msg: String) -> syn::Error {
     syn::Error::new_spanned(t, msg)
@@ -176,7 +177,27 @@ fn sanitize(input: TokenStream) -> TokenStream {
 }
 
 #[proc_macro]
-pub fn proc_use_inline(input: TokenStream) -> TokenStream {
+pub fn proc_use_file(input: TokenStream) -> TokenStream {
     let input = sanitize(input);
     expand(parse_macro_input!(input as File).items)
+}
+
+#[proc_macro]
+pub fn proc_use_inline(input: TokenStream) -> TokenStream {
+    let str_input = parse_macro_input!(input as syn::LitStr);
+    println!("inp {:#?}", str_input);
+    let input = syn::parse_str::<File>(str_input.value().as_str());
+    match input {
+	Ok(stream) => {
+	    let san = sanitize(TokenStream::from(quote! {
+		#stream
+	    }));
+	    println!("san {:#?}", san);
+	    expand(parse_macro_input!(san as File).items)
+	}
+	Err(err) => {
+	    println!("err");
+	    TokenStream::from(err.to_compile_error())
+	}
+    }
 }
