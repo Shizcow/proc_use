@@ -184,8 +184,12 @@ pub fn proc_use_file(input: TokenStream) -> TokenStream {
 
 #[proc_macro]
 pub fn proc_use_inline(input: TokenStream) -> TokenStream {
+    //let input = sanitize(input);
     let str_input = parse_macro_input!(input as syn::LitStr);
-    println!("inp {:#?}", str_input);
+    println!("inp {:?}", syn::parse_str::<syn::File>(&str_input.value()));
+
+    TokenStream::new()
+    /*
     let input = syn::parse_str::<File>(str_input.value().as_str());
     match input {
 	Ok(stream) => {
@@ -199,5 +203,5 @@ pub fn proc_use_inline(input: TokenStream) -> TokenStream {
 	    println!("err");
 	    TokenStream::from(err.to_compile_error())
 	}
-    }
+    }*/
 }
