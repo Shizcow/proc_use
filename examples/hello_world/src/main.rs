@@ -1,7 +1,7 @@
 proc_use::proc_use_inline! {
-    "#[__mod] \
+    "#[mod] \
     use foo::*; \
-    #[__mod(\"../external/bar.rs\")] \
+    #[mod(\"../external/bar.rs\")] \
     use bar::bar;"
 }
 

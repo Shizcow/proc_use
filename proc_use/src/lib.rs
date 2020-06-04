@@ -3,7 +3,6 @@ extern crate proc_macro;
 use syn::{File, parse_macro_input, spanned::Spanned};
 use proc_macro::{Delimiter, TokenStream, TokenTree, Ident};
 use quote::quote;
-use regex::Regex;
 
 fn mk_err<T: quote::ToTokens>(t: T, msg: String) -> syn::Error {
     syn::Error::new_spanned(t, msg)
@@ -185,13 +184,12 @@ pub fn proc_use_file(input: TokenStream) -> TokenStream {
 #[proc_macro]
 pub fn proc_use_inline(input: TokenStream) -> TokenStream {
     let str_input = parse_macro_input!(input as syn::LitStr);
-    let input = syn::parse_str::<File>(str_input.value().as_str());
-    match input {
-	Ok(stream) => {
-	    expand(stream.items)
-	}
+    match str_input.value().parse::<TokenStream>() {
+	Ok(tokens) => proc_use_file(tokens),
 	Err(err) => {
-	    TokenStream::from(err.to_compile_error())
-	}
+	    syn::Error::new(proc_macro2::Span::call_site(),
+			    "Lexer error on parse. Something is very wrong.")
+		.to_compile_error().into()
+	},
     }
 }
