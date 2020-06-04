@@ -176,20 +176,30 @@ fn sanitize(input: TokenStream) -> TokenStream {
 }
 
 #[proc_macro]
-pub fn proc_use_file(input: TokenStream) -> TokenStream {
+pub fn proc_use_lit(input: TokenStream) -> TokenStream {
     let input = sanitize(input);
     expand(parse_macro_input!(input as File).items)
 }
 
 #[proc_macro]
-pub fn proc_use_inline(input: TokenStream) -> TokenStream {
-    let str_input = parse_macro_input!(input as syn::LitStr);
-    match str_input.value().parse::<TokenStream>() {
-	Ok(tokens) => proc_use_file(tokens),
-	Err(err) => {
-	    syn::Error::new(proc_macro2::Span::call_site(),
-			    "Lexer error on parse. Something is very wrong.")
-		.to_compile_error().into()
-	},
+pub fn proc_use_string(input: TokenStream) -> TokenStream {
+    match parse_macro_input!(input as syn::LitStr)
+	.value().parse::<TokenStream>() {
+	    Ok(tokens) => proc_use_lit(tokens),
+	    Err(_) =>
+		syn::Error::new(proc_macro2::Span::call_site(),
+				"Lexer error on parse. Something is very wrong.")
+		.to_compile_error().into(),
+	}
+}
+
+// Automatically determines what to use
+#[proc_macro]
+pub fn proc_use(input: TokenStream) -> TokenStream {
+    let trees: Vec<TokenTree> = input.into_iter().collect();
+    if trees.len() == 1 { // even #[mod] is > 1 token, so this is only true for a lit
+	proc_use_string(trees.into_iter().collect())
+    } else {
+	proc_use_lit(trees.into_iter().collect())
     }
 }

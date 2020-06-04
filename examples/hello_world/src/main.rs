@@ -1,4 +1,4 @@
-proc_use::proc_use_inline! {
+proc_use::proc_use! {
     "#[mod] \
     use foo::*; \
     #[mod(\"../external/bar.rs\")] \
