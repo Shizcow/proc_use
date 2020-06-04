@@ -1,6 +1,7 @@
 extern crate proc_macro;
 
-use proc_macro::TokenStream;
+use syn::{File, parse_macro_input};
+use proc_macro::{Delimiter, TokenStream, TokenTree, Ident};
 use quote::quote;
 
 fn mk_err<T: quote::ToTokens>(t: T, msg: String) -> syn::Error {
@@ -96,14 +97,44 @@ fn expand(items: Vec<syn::Item>) -> TokenStream  {
     })
 }
 
+// replaces keyword `mod` with `__mod` in attribute contexts
+fn sanitize(input: TokenStream) -> TokenStream {
+    let mut tokens: Vec<TokenTree> = input.into_iter().collect();
+    for i in 0..tokens.len()-1 {
+	match &tokens[i] {
+	    TokenTree::Punct(p) if p.as_char() == '#' => {
+		match &tokens[i+1] {
+		    TokenTree::Group(g) if g.delimiter() == Delimiter::Bracket => {
+			let mut stream: Vec<TokenTree> = g.stream().into_iter().collect();
+			if stream.len() == 1 && stream[0].to_string() == "mod" {
+			    stream[0] = TokenTree::Ident(Ident::new("__mod", stream[0].span()));
+			}
+			tokens[i+1] = TokenTree::Group(proc_macro::Group::new(Delimiter::Bracket, stream.into_iter().collect()));
+		    },
+		    TokenTree::Punct(p) if p.as_char() == '!' => {
+			match &tokens[i+2] {
+			    TokenTree::Group(g) if g.delimiter() == Delimiter::Bracket => {
+				let mut stream: Vec<TokenTree> = g.stream().into_iter().collect();
+				if stream.len() == 1 && stream[0].to_string() == "mod" {
+				    stream[0] = TokenTree::Ident(Ident::new("__mod", stream[0].span()));
+				}
+				tokens[i+2] = TokenTree::Group(proc_macro::Group::new(Delimiter::Bracket, stream.into_iter().collect()));
+			    },
+			    _ => {},
+			}
+		    },
+		    _ => {},
+		}
+	    },
+	    _ => {},
+	}
+    }
+    
+    tokens.into_iter().collect()
+}
+
 #[proc_macro]
 pub fn proc_use_inline(input: TokenStream) -> TokenStream {
-    let input = syn::parse::<syn::File>(input);
-    match input {
-	Ok(tree) => {
-	    let output = expand(tree.items);
-	    return output;
-	},
-	Err(err) => return TokenStream::from(err.to_compile_error())
-    }
+    let input = sanitize(input);
+    expand(parse_macro_input!(input as File).items)
 }
