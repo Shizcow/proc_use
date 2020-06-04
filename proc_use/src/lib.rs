@@ -51,6 +51,15 @@ fn tree_path(tree: syn::UseTree) -> String {
     }
 }
 
+fn tree_paths(tree: syn::UseTree) -> Vec<String> {
+    match tree {
+	syn::UseTree::Group(group) => {
+	    group.items.into_iter().map(|item| tree_path(item)).collect()
+	},
+	item => vec![tree_path(item)]
+    }
+}
+
 fn expand(items: Vec<syn::Item>) -> TokenStream  {
     let mut mod_stmts = Vec::new();
     let mut use_stmts = Vec::new();
@@ -59,20 +68,23 @@ fn expand(items: Vec<syn::Item>) -> TokenStream  {
 	match item_outer {
 	    syn::Item::Use(mut item_use) => {
 		let res = has_attr("__mod", item_use.clone());
-		let mod_name = tree_path(item_use.clone().tree);
+		let mod_names = tree_paths(item_use.clone().tree);
+		println!("modname: {:?}", mod_names);
 		item_use.attrs.clear();
 		use_stmts.push(item_use);
 
 		match res {
 		    Ok(has_attr) => {
 			if has_attr {
-			    let mod_stmt = format!("mod {};", mod_name);
-			    match syn::parse_str::<syn::ItemMod>(&mod_stmt) {
-				Ok(item) => {
-				    mod_stmts.push(item);
-				},
-				Err(err) => {
-				    return TokenStream::from(err.to_compile_error());   
+			    for mod_name in mod_names {
+				let mod_stmt = format!("mod {};", mod_name);
+				match syn::parse_str::<syn::ItemMod>(&mod_stmt) {
+				    Ok(item) => {
+					mod_stmts.push(item);
+				    },
+				    Err(err) => {
+					return TokenStream::from(err.to_compile_error());   
+				    }
 				}
 			    }
 			} else {
