@@ -148,7 +148,7 @@ fn sanitize(input: TokenStream) -> TokenStream {
 		match &tokens[i+1] {
 		    TokenTree::Group(g) if g.delimiter() == Delimiter::Bracket => {
 			let mut stream: Vec<TokenTree> = g.stream().into_iter().collect();
-			if stream.len() == 1 && stream[0].to_string() == "mod" {
+			if stream.len() >= 1 && stream[0].to_string() == "mod" { // this optional arg
 			    stream[0] = TokenTree::Ident(Ident::new("__mod", stream[0].span()));
 			}
 			tokens[i+1] = TokenTree::Group(proc_macro::Group::new(Delimiter::Bracket, stream.into_iter().collect()));
@@ -157,7 +157,7 @@ fn sanitize(input: TokenStream) -> TokenStream {
 			match &tokens[i+2] {
 			    TokenTree::Group(g) if g.delimiter() == Delimiter::Bracket => {
 				let mut stream: Vec<TokenTree> = g.stream().into_iter().collect();
-				if stream.len() == 1 && stream[0].to_string() == "mod" {
+				if stream.len() == 1 && stream[0].to_string() == "mod" { // this does not
 				    stream[0] = TokenTree::Ident(Ident::new("__mod", stream[0].span()));
 				}
 				tokens[i+2] = TokenTree::Group(proc_macro::Group::new(Delimiter::Bracket, stream.into_iter().collect()));
