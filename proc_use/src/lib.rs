@@ -36,13 +36,8 @@ fn extract_path(attr_str: &str, item: &mut syn::ItemUse) -> syn::Result<Option<S
 		match syn::parse2::<syn::ExprParen>(attr.tokens) {
 		    Ok(paren) => {
 			match *paren.expr {
-			    syn::Expr::Lit(lit) => {
-				match lit.lit {
-				    syn::Lit::Str(path) => Ok(Some(path.value())),
-				    err => Err(syn::Error::new(err.span(),
-							       "Expected string literal for path"
-				    )),
-				}
+			    syn::Expr::Lit(syn::ExprLit{lit: syn::Lit::Str(path), attrs: _}) => {
+				Ok(Some(path.value()))
 			    }
 			    err => Err(syn::Error::new(err.span(),
 						       "Expected string literal for path"
@@ -108,7 +103,21 @@ fn expand(items: Vec<syn::Item>) -> TokenStream  {
 			}
 		    },
 		    Ok(Some(path)) => {
-			panic!("found path {}", path);
+			let mod_name = tree_path(&item_use.tree); // only one mod with a path decl
+			let mod_stmt = format!("mod {};", mod_name);
+			match syn::parse_str::<syn::ItemMod>(&mod_stmt) {
+			    Ok(mut item) => {
+				item.attrs.push(
+				    syn::parse2::<syn::ItemStruct>(quote!{
+					#[path = #path]
+					struct Dummy;
+				    }).unwrap().attrs.pop().unwrap());
+				mod_stmts.push(item);
+			    },
+			    Err(err) => {
+				return TokenStream::from(err.to_compile_error());   
+			    }
+			}
 		    },
 		    Err(err) => return TokenStream::from(err.to_compile_error())
 		}
