@@ -1,6 +1,4 @@
-proc_use::proc_use! {
-    mod("../external/foo.rs");
-}
+include!(concat!(env!("OUT_DIR"), "/proc_use.rs"));
 
 fn main() {
     foo::foo();

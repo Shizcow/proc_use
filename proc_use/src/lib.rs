@@ -169,7 +169,7 @@ fn expand(items: Vec<syn::Item>) -> TokenStream  {
 				    ).to_compile_error()),
 				}
 			    },
-			e => return TokenStream::from(mk_err(
+			_ => return TokenStream::from(mk_err(
 			    ident,
 			    "Error: found const r#mod without proper syntax. Likely an internal error.".to_string()
 			).to_compile_error()),
@@ -228,7 +228,7 @@ fn desugar(input: TokenStream) -> TokenStream {
 			    let path_quoted = stream[0].to_string();
 			    if path_quoted.as_bytes()[0] == '"' as u8 && path_quoted.chars().last() == Some('"') {
 				let path = &path_quoted[1..path_quoted.len()-1];
-				let mut new_tokens: Vec<TokenTree> = TokenStream::from(quote!{
+				let new_tokens: Vec<TokenTree> = TokenStream::from(quote!{
 				    const r#mod: _ = #path
 				}).into_iter().collect();
 				tokens.splice(i..i+2, new_tokens.into_iter());
@@ -248,30 +248,7 @@ fn desugar(input: TokenStream) -> TokenStream {
 }
 
 #[proc_macro]
-pub fn proc_use_lit(input: TokenStream) -> TokenStream {
+pub fn proc_use(input: TokenStream) -> TokenStream {
     let input = desugar(input);
     expand(parse_macro_input!(input as File).items)
-}
-
-#[proc_macro]
-pub fn proc_use_string(input: TokenStream) -> TokenStream {
-    match parse_macro_input!(input as syn::LitStr)
-	.value().parse::<TokenStream>() {
-	    Ok(tokens) => proc_use_lit(tokens),
-	    Err(_) =>
-		syn::Error::new(proc_macro2::Span::call_site(),
-				"Lexer error on parse. Something is very wrong.")
-		.to_compile_error().into(),
-	}
-}
-
-// Automatically determines what to use
-#[proc_macro]
-pub fn proc_use(input: TokenStream) -> TokenStream {
-    let trees: Vec<TokenTree> = input.into_iter().collect();
-    if trees.len() == 1 { // even #[mod] is > 1 token, so this is only true for a lit
-	proc_use_string(trees.into_iter().collect())
-    } else {
-	proc_use_lit(trees.into_iter().collect())
-    }
 }

@@ -4,5 +4,5 @@ use std::path::PathBuf;
 
 fn main() {
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
-    //UseBuilder::new().add_file("external/foo.rs").write_to_file(out_path.join("proc_mod.rs"));
+    UseBuilder::new().add_file("external/foo.rs".into()).write_to_file(out_path.join("proc_use.rs"));
 }
