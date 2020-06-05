@@ -1,6 +1,5 @@
 proc_use::proc_use! {
-    // mod("../external/foo.rs");
-    const r#mod: _ = "../external/foo.rs";
+    mod("../external/foo.rs");
 }
 
 

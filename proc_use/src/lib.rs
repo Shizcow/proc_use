@@ -129,7 +129,8 @@ fn expand(items: Vec<syn::Item>) -> TokenStream  {
 		attrs.len() == 0 && vis == syn::Visibility::Inherited && ident.to_string() == "r#mod"
 		=> { // de-sugared mod()
 		    match (*ty, *expr) {
-			(syn::Type::Infer(syn::TypeInfer{underscore_token: syn::token::Underscore{spans: _}}), syn::Expr::Lit(syn::ExprLit{attrs, lit: syn::Lit::Str(lit)}))
+			(syn::Type::Infer(syn::TypeInfer{underscore_token: syn::token::Underscore{spans: _}}),
+			 syn::Expr::Lit(syn::ExprLit{attrs, lit: syn::Lit::Str(lit)}))
 			    if attrs.len() == 0 => {
 				let path_str = lit.value();
 				let path_buf = std::path::PathBuf::from(path_str.clone());
@@ -168,7 +169,7 @@ fn expand(items: Vec<syn::Item>) -> TokenStream  {
 				    ).to_compile_error()),
 				}
 			    },
-			_ => return TokenStream::from(mk_err(
+			e => return TokenStream::from(mk_err(
 			    ident,
 			    "Error: found const r#mod without proper syntax. Likely an internal error.".to_string()
 			).to_compile_error()),
@@ -189,8 +190,9 @@ fn expand(items: Vec<syn::Item>) -> TokenStream  {
     })
 }
 
-// replaces keyword `mod` with `__mod` in attribute contexts
-fn sanitize(input: TokenStream) -> TokenStream {
+// 1) replaces keyword `mod` with `__mod` in attribute contexts
+// 2) replaces `mod($PATH)` with `const r#mod: _ = $PATH;`
+fn de_sugar(input: TokenStream) -> TokenStream {
     let mut tokens: Vec<TokenTree> = input.into_iter().collect();
     for i in 0..tokens.len()-1 {
 	match &tokens[i] {
@@ -218,6 +220,24 @@ fn sanitize(input: TokenStream) -> TokenStream {
 		    _ => {},
 		}
 	    },
+	    TokenTree::Ident(__mod) if __mod.to_string() == "mod" => {
+		match &tokens[i+1] {
+		    TokenTree::Group(g) if g.delimiter() == Delimiter::Parenthesis => {
+			let stream: Vec<TokenTree> = g.stream().into_iter().collect();
+			if stream.len() == 1  {
+			    let path_quoted = stream[0].to_string();
+			    let path = &path_quoted[1..path_quoted.len()-1];
+			    let mut new_tokens: Vec<TokenTree> = TokenStream::from(quote!{
+				const r#mod: _ = #path
+			    }).into_iter().collect();
+			    tokens.splice(i..i+2, new_tokens.into_iter());
+			} else {
+			    tokens[i+1] = TokenTree::Group(proc_macro::Group::new(Delimiter::Bracket, stream.into_iter().collect()));
+			}
+		    },
+		    _ => {},
+		}
+	    }
 	    _ => {},
 	}
     }
@@ -227,7 +247,7 @@ fn sanitize(input: TokenStream) -> TokenStream {
 
 #[proc_macro]
 pub fn proc_use_lit(input: TokenStream) -> TokenStream {
-    let input = sanitize(input);
+    let input = de_sugar(input);
     expand(parse_macro_input!(input as File).items)
 }
 
