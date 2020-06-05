@@ -97,7 +97,7 @@ fn expand(items: Vec<syn::Item>) -> TokenStream  {
 				    mod_stmts.push(item);
 				},
 				Err(err) => {
-				    return TokenStream::from(err.to_compile_error());   
+				    return TokenStream::from(err.to_compile_error());
 				}
 			    }
 			}
@@ -124,10 +124,60 @@ fn expand(items: Vec<syn::Item>) -> TokenStream  {
 		
 		use_stmts.push(item_use);
 	    },
-	    _ => {
+	    syn::Item::Const(syn::ItemConst{attrs, vis, const_token: _, ident, colon_token: _, ty,
+					    eq_token: _, expr, semi_token: _}) if
+		attrs.len() == 0 && vis == syn::Visibility::Inherited && ident.to_string() == "r#mod"
+		=> { // de-sugared mod()
+		    match (*ty, *expr) {
+			(syn::Type::Infer(syn::TypeInfer{underscore_token: syn::token::Underscore{spans: _}}), syn::Expr::Lit(syn::ExprLit{attrs, lit: syn::Lit::Str(lit)}))
+			    if attrs.len() == 0 => {
+				let path_str = lit.value();
+				let path_buf = std::path::PathBuf::from(path_str.clone());
+				match (path_buf.file_stem(), path_buf.extension()) { // ensure file is valid
+				    (Some(mod_name), Some(ext)) if ext == "rs" => {
+					match mod_name.to_str() {
+					    Some(mod_str) => {
+						let mod_stmt = format!("mod {};", mod_str);
+						match syn::parse_str::<syn::ItemMod>(&mod_stmt) {
+						    Ok(mut item) => {
+							item.attrs.push(
+							    syn::parse2::<syn::ItemStruct>(quote!{
+								#[path = #path_str]
+								struct Dummy;
+							    }).unwrap().attrs.pop().unwrap());
+							mod_stmts.push(item);
+						    },
+						    Err(err) => {
+							return TokenStream::from(err.to_compile_error());
+						    }
+						}
+					    },
+					    None => return TokenStream::from(mk_err(
+						lit,
+						"Invalid file. Only UTF8 file names are valie".to_string()
+					    ).to_compile_error()),
+					}
+				    },
+				    (Some(_), _) => return TokenStream::from(mk_err(
+					lit,
+					"Invalid file. Possible causes: file is not a Rust file.".to_string()
+				    ).to_compile_error()),
+				    (None, _) => return TokenStream::from(mk_err(
+					lit,
+					"Invalid file. Possible causes: does not exist, is not a regular file.".to_string()
+				    ).to_compile_error()),
+				}
+			    },
+			_ => return TokenStream::from(mk_err(
+			    ident,
+			    "Error: found const r#mod without proper syntax. Likely an internal error.".to_string()
+			).to_compile_error()),
+		    }
+		},
+	    err => {
 		return TokenStream::from(mk_err(
-		    item_outer,
-		    "Error: expected syn::ItemUse. More info found at https://docs.rs/syn/1.0.30/syn/struct.ItemUse.html.".to_string()
+		    err,
+		    "Error: Expected syn::ItemUse. More info found at https://docs.rs/syn/1.0.30/syn/struct.ItemUse.html.".to_string()
 		).to_compile_error());
 	    }
 	}

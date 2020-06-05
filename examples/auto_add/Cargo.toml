@@ -1,0 +1,12 @@
+[package]
+name = "auto_add"
+version = "0.1.0"
+authors = ["Shizcow <pohl.devin@gmail.com>"]
+edition = "2018"
+build = "build.rs"
+
+[dependencies]
+proc_use = { path = "../../proc_use" }
+
+[build-dependencies]
+proc_use_build = { path = "../../proc_use_build" }
