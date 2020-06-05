@@ -226,11 +226,13 @@ fn de_sugar(input: TokenStream) -> TokenStream {
 			let stream: Vec<TokenTree> = g.stream().into_iter().collect();
 			if stream.len() == 1  {
 			    let path_quoted = stream[0].to_string();
-			    let path = &path_quoted[1..path_quoted.len()-1];
-			    let mut new_tokens: Vec<TokenTree> = TokenStream::from(quote!{
-				const r#mod: _ = #path
-			    }).into_iter().collect();
-			    tokens.splice(i..i+2, new_tokens.into_iter());
+			    if path_quoted.as_bytes()[0] == '"' as u8 && path_quoted.chars().last() == Some('"') {
+				let path = &path_quoted[1..path_quoted.len()-1];
+				let mut new_tokens: Vec<TokenTree> = TokenStream::from(quote!{
+				    const r#mod: _ = #path
+				}).into_iter().collect();
+				tokens.splice(i..i+2, new_tokens.into_iter());
+			    }
 			} else {
 			    tokens[i+1] = TokenTree::Group(proc_macro::Group::new(Delimiter::Bracket, stream.into_iter().collect()));
 			}
