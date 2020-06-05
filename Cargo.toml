@@ -3,5 +3,5 @@
 members = [
     "proc_use",
     "examples/hello_world",
-    "examples/auto_add",
+    "examples/inline",
 ]

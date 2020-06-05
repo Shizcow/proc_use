@@ -1,12 +1,5 @@
-proc_use::proc_use! {
-    #[mod]
-    use foo::*;
-    #[mod("../external/bar.rs")]
-    use bar::bar;
-}
+include!(concat!(env!("OUT_DIR"), "/proc_use.rs"));
 
 fn main() {
-    println!("hi");
     foo();
-    bar();
 }

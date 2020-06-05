@@ -1,4 +1,4 @@
-use proc_use_build::UseBuilder;
+use proc_use::UseBuilder;
 use std::env;
 use std::path::PathBuf;
 

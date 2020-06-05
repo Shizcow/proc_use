@@ -1,11 +1,8 @@
 [package]
-name = "hello_world"
+name = "inline"
 version = "0.1.0"
 authors = ["Shizcow <pohl.devin@gmail.com>"]
 edition = "2018"
-build = "build.rs"
 
 [dependencies]
-
-[build-dependencies]
-proc_use = { path = "../../proc_use" }
+proc_use_inline = { path = "../../proc_use_inline" }
