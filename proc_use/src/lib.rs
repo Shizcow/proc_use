@@ -192,7 +192,7 @@ fn expand(items: Vec<syn::Item>) -> TokenStream  {
 
 // 1) replaces keyword `mod` with `__mod` in attribute contexts
 // 2) replaces `mod($PATH)` with `const r#mod: _ = $PATH;`
-fn de_sugar(input: TokenStream) -> TokenStream {
+fn desugar(input: TokenStream) -> TokenStream {
     let mut tokens: Vec<TokenTree> = input.into_iter().collect();
     for i in 0..tokens.len()-1 {
 	match &tokens[i] {
@@ -249,7 +249,7 @@ fn de_sugar(input: TokenStream) -> TokenStream {
 
 #[proc_macro]
 pub fn proc_use_lit(input: TokenStream) -> TokenStream {
-    let input = de_sugar(input);
+    let input = desugar(input);
     expand(parse_macro_input!(input as File).items)
 }
 

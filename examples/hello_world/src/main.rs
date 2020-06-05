@@ -7,6 +7,6 @@ proc_use::proc_use! {
 
 fn main() {
     println!("hi");
-    foo::foo();
+    foo();
     bar();
 }
