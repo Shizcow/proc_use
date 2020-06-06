@@ -1,0 +1,13 @@
+[package]
+name = "overriding"
+version = "0.1.0"
+authors = ["Shizcow <pohl.devin@gmail.com>"]
+edition = "2018"
+build = "build.rs"
+
+[dependencies]
+overrider = "~0.4.0"
+
+[build-dependencies]
+proc_use = { path = "../../proc_use" }
+overrider_build = "~0.4.0"
