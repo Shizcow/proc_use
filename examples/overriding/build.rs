@@ -3,7 +3,8 @@ use std::env;
 use std::path::PathBuf;
 
 fn main() {
-    let plugin = true;
+    let plugin = false; // Change me!
+    
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
 
     let mut override_watch = vec!["src/reference.rs"];
