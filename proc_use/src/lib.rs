@@ -1,16 +1,18 @@
 use std::path::PathBuf;
 use std::fs::File;
 use std::io::Write;
+use itertools::Itertools;
 use glob::glob;
 
 pub struct UseBuilder {
     mod_stmts: Vec<String>,
     use_stmts: Vec<String>,
+    unused: bool, // #[allow(unused_imports)] ?
 }
 
 impl UseBuilder {
     pub fn new() -> Self {
-	Self{mod_stmts: Vec::new(), use_stmts: Vec::new()}
+	Self{mod_stmts: Vec::new(), use_stmts: Vec::new(), unused: true}
     }
     
     pub fn mod_file(&mut self, file: PathBuf) -> &mut Self {
@@ -44,9 +46,25 @@ impl UseBuilder {
 	}
 	self
     }
+
+    // #[allow(unused_imports)] on each use statement (does not affect import contents)
+    pub fn allow_unused(&mut self) -> &mut Self {
+	self.unused = true;
+	self
+    }
+    pub fn warn_unused(&mut self) -> &mut Self {
+	self.unused = false;
+	self
+    }
     
     pub fn write_to_file_use(&mut self, path: PathBuf) -> &mut Self {
-	self.write_to_file(path, self.use_stmts.join("\n").as_bytes());
+	self.write_to_file(path, 
+			   if self.unused {
+			       self.use_stmts.iter()
+				   .map(|s| format!("#[allow(unused_imports)]\n{}", s)).join("\n")
+			   } else {
+			       self.use_stmts.join("\n")
+			   }.as_bytes());
 	self
     }
     pub fn write_to_file_mod(&mut self, path: PathBuf) -> &mut Self {
@@ -54,9 +72,15 @@ impl UseBuilder {
 	self
     }
     pub fn write_to_file_all(&mut self, path: PathBuf) -> &mut Self {
-	self.write_to_file(path, itertools::join(
-	    self.mod_stmts.iter().chain(self.use_stmts.iter()), "\n"
-	).as_bytes());
+	self.write_to_file(path,
+			   self.mod_stmts.iter().chain(std::iter::once(
+			       &if self.unused {
+				   self.use_stmts.iter()
+				       .map(|s| format!("#[allow(unused_imports)]\n{}", s)).join("\n")
+			       } else {
+				   self.use_stmts.join("\n")
+			       }
+			   )).join("\n").as_bytes());
 	self
     }
     
@@ -72,7 +96,8 @@ impl UseBuilder {
 					    file.to_string_lossy(),
 					    mod_name.to_string_lossy()));
 		if let Some(use_stmt) = use_stmt {
-		    self.use_stmts.push(format!("use {}::{};", mod_name.to_string_lossy(),
+		    self.use_stmts.push(format!("use {}::{};",
+						mod_name.to_string_lossy(),
 						use_stmt));
 		}
 	    },
