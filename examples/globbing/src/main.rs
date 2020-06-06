@@ -1,8 +1,8 @@
-include!(concat!(env!("OUT_DIR"), "/proc_use.rs"));
+mod core {
+    pub mod core;
+}
+use crate::core::core::*;
 
 fn main() {
-    foo1();
-    foo2();
-    foo3();
-    foo4();
+    execute();
 }
