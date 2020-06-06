@@ -3,5 +3,6 @@
 members = [
     "proc_use",
     "examples/hello_world",
+    "examples/globbing",
     "examples/inline",
 ]
