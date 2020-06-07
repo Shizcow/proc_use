@@ -10,7 +10,6 @@
 //! [https://docs.rs/proc_use]: https://docs.rs/proc_use
 
 ////////////////////////////////////////////////////////////////////////////////
-
 use std::path::PathBuf;
 use std::fs::File;
 use std::io::Write;
