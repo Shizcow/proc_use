@@ -4,10 +4,10 @@
 //!
 //! The proc_use_inline is a macro to generate use and mod statements.
 //!
-//! See the proc_use website [https://docs.rs/proc_use] for additional documentation and
+//! See the proc_use [website](https://docs.rs/proc_use_inline) for additional documentation and
 //! usage examples.
 //!
-//! [https://docs.rs/proc_use]: https://docs.rs/proc_use
+//! [https://docs.rs/proc_use_inline]: https://docs.rs/proc_use_inline
 
 ////////////////////////////////////////////////////////////////////////////////
 extern crate proc_macro;

@@ -2,13 +2,26 @@
 //!
 //! proc_use is a library for semi-dynamically importing creates/modules.
 //!
-//! The proc_use library leverages the builder patterns. For more information about the builder pattern find it at [https://doc.rust-lang.org/1.0.0/style/ownership/builders.html].
+//! # About
+//! The proc_use library leverages the builder patterns. For more information about the builder pattern find it at [Rust Builder Pattern](https://doc.rust-lang.org/1.0.0/style/ownership/builders.html).
 //!
-//! See the proc_use website [https://docs.rs/proc_use] for additional documentation and
-//! usage examples.
+//! See the proc_use [website](https://docs.rs/proc_use) for additional documentation and usage examples.
 //!
-//! [https://docs.rs/proc_use]: https://docs.rs/proc_use
-
+//! # Quick Example
+//! project_root/src/main.rs
+//! ```
+//! include!(concat!(env!("OUT_DIR"), "/proc_use.rs"));
+//! fn main() {
+//!     foo();
+//! }
+//! ```
+//!
+//! project_roo/external/foo.rs
+//! ```
+//! pub fn foo() {
+//!     println!("Hello from foo!");
+//! }
+//! ```
 ////////////////////////////////////////////////////////////////////////////////
 use std::path::PathBuf;
 use std::fs::File;
@@ -73,7 +86,7 @@ impl UseBuilder {
     ///
     /// ```
     /// let builder = UseBuilder::new()
-    ///         .mod_glob("src/util/*.rs", "*".into());
+    ///         .mod_glob("src/util/*.rs");
     /// ```
     pub fn mod_glob(&mut self, globstring: &str) -> &mut Self {
 	for entry in glob(globstring).expect("Failed to read glob pattern") {
