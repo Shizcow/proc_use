@@ -1,4 +1,4 @@
-# proc_use &emsp; [![Latest Version]][crates.io] [![proc_use: rustc 1.43.1+]][Rust 1.43.1]]
+# proc_use &emsp; [![Latest Version]][crates.io] [![proc_use: rustc 1.43.1+]][Rust 1.43.1]
 
 [Latest Version]: https://img.shields.io/crates/v/proc_use.svg
 [crates.io]: https://crates.io/crates/proc_use
