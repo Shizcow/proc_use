@@ -4,10 +4,10 @@
 //!
 //! The proc_use library leverages the builder patterns. For more information about the builder pattern find it at [https://doc.rust-lang.org/1.0.0/style/ownership/builders.html].
 //!
-//! See the proc_use website [https://proc_use.rs/] for additional documentation and
+//! See the proc_use website [https://docs.rs/proc_use] for additional documentation and
 //! usage examples.
 //!
-//! [https://proc_use.rs/]: https://proc_use.rs/
+//! [https://docs.rs/proc_use]: https://docs.rs/proc_use
 
 ////////////////////////////////////////////////////////////////////////////////
 
