@@ -1,4 +1,4 @@
-# proc_use
+# proc_use &emsp; [![Latest Version]][crates.io] [![proc_use: rustc 1.43.1+]][Rust 1.43.1]
 `proc_use` is a Rust crate to help semi-dynamically import crates and modules.
 All logic is ran at compile time, mostly contained in `build.rs`.
 
