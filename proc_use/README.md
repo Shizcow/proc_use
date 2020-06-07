@@ -2,8 +2,8 @@
 
 [Latest Version]: https://img.shields.io/crates/v/proc_use.svg
 [crates.io]: https://crates.io/crates/proc_use
-[proc_use: rustc 1.13+]: https://img.shields.io/badge/proc_use_1.43.1+-lightgray.svg
-[Rust 1.31]: https://blog.rust-lang.org/2020/05/07/Rust.1.43.1.html
+[proc_use: rustc 1.43.1+]: https://img.shields.io/badge/proc_use_1.43.1+-lightgray.svg
+[Rust 1.43.1]: https://blog.rust-lang.org/2020/05/07/Rust.1.43.1.html
 
 `proc_use` is a Rust crate to help semi-dynamically import crates and modules.
 All logic is ran at compile time, mostly contained in `build.rs`.
