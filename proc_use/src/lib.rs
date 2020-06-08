@@ -72,8 +72,8 @@ impl UseBuilder {
     ///
     /// * `file` - A PathBuf to the file that needs to be modded.
     /// * `alias` - Alternate name for imported mod. Eg import `foo.rs` as `mod bar`.
-    pub fn mod_file_alias(&mut self, file: PathBuf, alias: String) -> &mut Self {
-	self.file(file, None, Some(alias));
+    pub fn mod_file_alias(&mut self, file: PathBuf, alias: &str) -> &mut Self {
+	self.file(file, None, Some(alias.to_string()));
 	self
     }
     
@@ -84,8 +84,8 @@ impl UseBuilder {
     /// * `file` - A PathBuf to the file that needs to be modded.
     /// * `use_stmt` - A String that holds the use pattern for the file.
     /// * `alias` - Alternate name for imported mod. Eg import `foo.rs` as `mod bar`.
-    pub fn use_file_alias(&mut self, file: PathBuf, use_stmt: String, alias: String) -> &mut Self {
-	self.file(file, Some(use_stmt), Some(alias));
+    pub fn use_file_alias(&mut self, file: PathBuf, use_stmt: String, alias: &str) -> &mut Self {
+	self.file(file, Some(use_stmt), Some(alias.to_string()));
 	self
     }
 
@@ -156,10 +156,10 @@ impl UseBuilder {
     ///         .mod_glob("src/util/*.rs");
     /// ```
     /// * `alias` - Alternate name for imported mod. Eg import `foo.rs` as `mod bar`.
-    pub fn mod_glob_alias(&mut self, globstring: &str, alias: String) -> &mut Self {
+    pub fn mod_glob_alias(&mut self, globstring: &str, alias: &str) -> &mut Self {
 	for entry in glob(globstring).expect("Failed to read glob pattern") {
 	    match entry {
-		Ok(path) => self.file(path, None, Some(alias.clone())),
+		Ok(path) => self.file(path, None, Some(alias.to_string())),
 		Err(e) => panic!("Could not resolve glob pattern: {:?}", e),
 	    }
 	}
@@ -178,10 +178,10 @@ impl UseBuilder {
     ///         .use_glob("src/util/*.rs", "*".into());
     /// ```
     /// * `alias` - Alternate name for imported mod. Eg import `foo.rs` as `mod bar`.
-    pub fn use_glob_alias(&mut self, globstring: &str, use_stmt: String, alias: String) -> &mut Self {
+    pub fn use_glob_alias(&mut self, globstring: &str, use_stmt: String, alias: &str) -> &mut Self {
 	for entry in glob(globstring).expect("Failed to read glob pattern") {
 	    match entry {
-		Ok(path) => self.file(path, Some(use_stmt.clone()), Some(alias.clone())),
+		Ok(path) => self.file(path, Some(use_stmt.clone()), Some(alias.to_string())),
 		Err(e) => panic!("Could not resolve glob pattern: {:?}", e),
 	    }
 	}
