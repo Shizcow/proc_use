@@ -8,4 +8,4 @@ build = "build.rs"
 [dependencies]
 
 [build-dependencies]
-proc_use = { path = "../../proc_use" }
+proc_use = "0.1.0"
