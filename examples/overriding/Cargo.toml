@@ -9,5 +9,5 @@ build = "build.rs"
 overrider = "~0.4.0"
 
 [build-dependencies]
-proc_use = "0.1.0"
+proc_use = "^0.1"
 overrider_build = "~0.4.0"
