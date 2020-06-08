@@ -6,4 +6,5 @@ members = [
     "examples/globbing",
     "examples/overriding",
     "examples/inline",
+    "examples/aliasing",
 ]
