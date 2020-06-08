@@ -1,3 +1,15 @@
+//! # proc_use_inline
+//!
+//! proc_use_inline is a library for semi-dynamically importing creates/modules.
+//!
+//! The proc_use_inline is a macro to generate use and mod statements.
+//!
+//! See the proc_use [website](https://docs.rs/proc_use_inline) for additional documentation and
+//! usage examples.
+//!
+//! [https://docs.rs/proc_use_inline]: https://docs.rs/proc_use_inline
+
+////////////////////////////////////////////////////////////////////////////////
 extern crate proc_macro;
 
 use syn::{File, parse_macro_input, spanned::Spanned};
@@ -247,6 +259,17 @@ fn desugar(input: TokenStream) -> TokenStream {
     tokens.into_iter().collect()
 }
 
+/// proc_use! macro, takes mod and use syntax to generate mod and use statements.
+///
+/// # Example
+/// ```
+/// proc_use_inline::proc_use! {
+///    #[mod]
+///    use foo::*;
+///    #[mod("../external/bar.rs")]
+///    use bar::bar;
+/// }
+/// ```
 #[proc_macro]
 pub fn proc_use(input: TokenStream) -> TokenStream {
     let input = desugar(input);

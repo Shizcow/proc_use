@@ -1,7 +1,7 @@
 [package]
 name = "proc_use_inline"
-version = "0.1.0"
-authors = ["Shizcow <pohl.devin@gmail.com>"]
+version = "0.1.1"
+authors = ["Shizcow <pohl.devin@gmail.com>", "gluaxspeed <jonathan.t.pavlik@gmail.com"]
 edition = "2018"
 license = "GPL-3.0+"
 description = "A different syntax for mod and use"

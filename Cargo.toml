@@ -2,6 +2,7 @@
 
 members = [
     "proc_use",
+    "proc_use_inline",
     "examples/hello_world",
     "examples/globbing",
     "examples/overriding",
